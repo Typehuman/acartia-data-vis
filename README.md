@@ -1,4 +1,4 @@
-# client
+# Acartia Offline First DB Example
 
 ## Project setup
 ```
