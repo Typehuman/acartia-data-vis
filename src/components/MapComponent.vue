@@ -54,19 +54,19 @@ export default {
         }
     },
     created() {
-
-    },
-    mounted() {
       // Fetch data from server upon instance creation
-      if (this.geoJSONSightings.length === 0 && this.$store.state.sightings.length === 0) {
+      if (this.geoJSONSightings.length === 0) {
         //this.mapSightings()
         this.loadSightings()
       } else {
         this.mapSightings()
         this.processSightings()
       }
+    },
+    mounted() {
+
         // Mounted to continuously monitor for changes
-        // this.mapSightings()
+        this.mapSightings()
     },
     updated() {
         // Mounted to continuously monitor for changes

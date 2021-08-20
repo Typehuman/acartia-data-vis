@@ -119,7 +119,6 @@ export const store = new Vuex.Store(
             commit('setSyncing', true)
             // Create IPFS instance with optional config
             const ipfs = await IPFS.create(ipfsOptions)
-            console.log(ipfs)
 
             // Create OrbitDB instance
             const orbitdb = await OrbitDB.createInstance(ipfs)
@@ -127,6 +126,7 @@ export const store = new Vuex.Store(
 
             // Connect to the peer id of the backend orbitdb database (NOTE: this will be an env variable)
             await orbitdb._ipfs.swarm.connect(process.env.VUE_APP_SWARM)
+            await orbitdb._ipfs.bootstrap.add(process.env.VUE_APP_SWARM)
 
             // create database
             const db2 = await orbitdb.docs(process.env.VUE_APP_DB_ADDRESS)
