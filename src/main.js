@@ -102,9 +102,9 @@ export const store = new Vuex.Store(
         try {
             // optional settings for the ipfs instance
             const ipfsOptions = {
-              repo: './ipfs',
+              //repo: './ipfs',
               EXPERIMENTAL: { pubsub: true },
-              preload: { enabled: false },
+              preload: { enabled: true },
               config: {
                 Bootstrap: [
                     process.env.VUE_APP_SWARM,
@@ -112,6 +112,7 @@ export const store = new Vuex.Store(
                 ],
                 Addresses: {
                   Swarm: [
+                      process.env.VUE_APP_SWARM,
                       process.env.VUE_APP_SWARM,
                     '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
                     '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
