@@ -106,8 +106,13 @@ export const store = new Vuex.Store(
               EXPERIMENTAL: { pubsub: true },
               preload: { enabled: false },
               config: {
+                Bootstrap: [
+                    process.env.VUE_APP_SWARM,
+                    process.env.VUE_APP_SWARM
+                ],
                 Addresses: {
                   Swarm: [
+                      process.env.VUE_APP_SWARM,
                     '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
                     '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
                     '/dns4/webrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/',
@@ -124,18 +129,12 @@ export const store = new Vuex.Store(
             const orbitdb = await OrbitDB.createInstance(ipfs)
             console.log(orbitdb)
 
-            // Connect to the peer id of the backend orbitdb database (NOTE: this will be an env variable)
-            await orbitdb._ipfs.swarm.connect(process.env.VUE_APP_SWARM)
-            await orbitdb._ipfs.bootstrap.add(process.env.VUE_APP_SWARM)
-
             // create database
             const db2 = await orbitdb.docs(process.env.VUE_APP_DB_ADDRESS)
 
             // Emit log message when db has synced with another peer
             db2.events.on('replicated', (address) => {
-              console.log(`Replicated ${address}`)
               const getData = db2.get('')
-              console.log(getData.length)
               // Set data from synchronisation into store
               commit('setSightings', getData)
             })
