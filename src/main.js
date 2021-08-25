@@ -133,7 +133,7 @@ export const store = new Vuex.Store(
             const db2 = await orbitdb.docs(process.env.VUE_APP_DB_ADDRESS)
 
             // Emit log message when db has synced with another peer
-            db2.events.on('replicated', (address) => {
+            db2.events.on('replicated', () => {
               const getData = db2.get('')
               // Set data from synchronisation into store
               commit('setSightings', getData)
