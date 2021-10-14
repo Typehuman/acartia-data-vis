@@ -104,7 +104,9 @@ export const store = new Vuex.Store(
             const ipfsOptions = {
               //repo: './ipfs',
               EXPERIMENTAL: { pubsub: true },
-              preload: { enabled: true },
+              preload: { enabled: true,
+                         addresses: [process.env.VUE_APP_SWARM]
+              },
               config: {
                 Bootstrap: [
                     process.env.VUE_APP_SWARM,
