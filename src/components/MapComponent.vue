@@ -59,14 +59,14 @@ export default {
         //this.mapSightings()
         this.loadSightings()
       } else {
+        console.log('started mapping in created')
         this.mapSightings()
         this.processSightings()
       }
     },
     mounted() {
-
-        // Mounted to continuously monitor for changes
         this.mapSightings()
+
     },
     updated() {
         // Mounted to continuously monitor for changes
@@ -425,15 +425,13 @@ export default {
                         "ssemmi_date_added": value.ssemmi_date_added,
                     }
                 }
-
-
                 sightingsArray.push(sightingEntry)
+                this.geoJSONSightings.push(sightingEntry)
             }
         })
-
-        const mapId = (this.getParent === 'Visualiser' ? 'ssemmi-map-layer' : 'ssemmi-heat-layer' )
-        this.mapView.getSource(mapId).setData({type: 'FeatureCollection', features: sightingsArray})
-      // this.mapSightings()
+          const mapId = (this.getParent === 'Visualiser' ? 'ssemmi-map-layer' : 'ssemmi-heat-layer')
+          this.mapView.getSource(mapId).setData({type: 'FeatureCollection', features: sightingsArray})
+          // this.mapSightings()
         }
     },
     computed: {
@@ -442,11 +440,21 @@ export default {
         },
         getSightings() {
           return this.$store.state.sightings
-        }
+        },
+      getStatus() {
+        return this.$store.state.isSyncing
+      }
+
     },
   watch: {
     getSightings() {
         this.processSightings()
+    },
+    getStatus() {
+      if (!this.getStatus) {
+        this.mapSightings()
+        this.processSightings()
+      }
     }
   }
 }
