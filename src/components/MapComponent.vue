@@ -2,7 +2,7 @@
     <div>
         <div id='mapContainer'></div>
         <div id='widget'>
-          <div v-if="getParent === 'Visualiser'">
+          <div v-if="getParent !== 'Heatmap'">
             <h2>Sightings</h2>
             <div class='widget-row colors'></div>
             <div class='widget-row labels'>
@@ -14,7 +14,7 @@
                 <div class='label'>5+</div>
             </div>
             <br>
-            <div class='slider-class' id='sliderbar'>
+            <div v-if="getParent !== 'Heatmap'" class='slider-class' id='sliderbar'>
                 <p><label id='active-date'>Loading date...</label></p>
                 <!-- Last 14 days slider -->
                 <input id='day-slider' class='widget-row' type="range" min="1" max="14" step="1" value="14" />
@@ -296,7 +296,7 @@ export default {
                   ]
                 })
 
-                if (currentPage === 'Visualiser') {
+                if (!isHome) {
                   // Listener function to monitor selected option for DAY
                   document.getElementById('day-slider').addEventListener('input', (e) => {
                     try {
@@ -330,22 +330,30 @@ export default {
 
                    } else {
                      preferenceFilter = [
-                       'all',
-                       ['==', ['to-number', ['get', 'day']], selectedDay],
-                       ['==', ['to-number', ['get', 'month']], selectedMonth],
-                       ['==', ['to-number', ['get', 'year']], selectedYear]
+                       'all'
                      ]
 
                      mapLayer = 'ssemmi-map-layer'
-                     innerText = "Sightings displayed for " +selectedDay+ " " +months[selectedMonth]+ " " +selectedYear
+
+                     if (!isHome) {
+                       preferenceFilter.push(['==', ['to-number', ['get', 'day']], selectedDay])
+                       preferenceFilter.push(['==', ['to-number', ['get', 'month']], selectedMonth])
+                       preferenceFilter.push(['==', ['to-number', ['get', 'year']], selectedYear])
+                       innerText = "Sightings displayed for " +selectedDay+ " " +months[selectedMonth]+ " " +selectedYear
+                     }
                    }
 
-                    // update the map
-                    map.setFilter(mapLayer, preferenceFilter)
+                  // update the map
+                  map.setFilter(mapLayer, preferenceFilter)
 
-                    // update text in the UI
-                    document.getElementById('active-date').innerText =innerText
+                  // update text in the UI
+                  if (!isHome) {
+                    document.getElementById('active-date').innerText = innerText
+                  }
                 }
+              if (isHome) {
+                changeSightingPreference()
+              }
 
             })
 
@@ -363,17 +371,16 @@ export default {
                 new mapboxgl.Popup()
                 .setLngLat(coordinates)
                 .setHTML(
-                            '<div class="container">'
-                                +'<h4><b>'+e.features[0].properties.entity+'</b></h4>'
-                                +'<p><b>SSEMMI ID: </b>'+e.features[0].properties.ssemmi_id+'</p>'
-                                +'<p><b>Created: </b>'+e.features[0].properties.created+'</p>'
-                                +'<p><b>Date: </b>'+e.features[0].properties.month+'/'+ e.features[0].properties.year+'</p>'
-                                +'<p><b>No Sighted: </b>'+e.features[0].properties.no_sighted+'</p>'
-                                +'<p><b>Witness: </b>'+e.features[0].properties.witness+'</p>'
-                                +'<p><b>Comments: </b> '+e.features[0].properties.comments+'</p>'
-                                +'<p><b>Date Added: </b> '+e.features[0].properties.ssemmi_date_added+'</p>'
-                            +'</div>'
-                            +'</div>'
+                    '<div class="container">'
+                    +'<h5><b>'+e.features[0].properties.comments+'</b></h5>'
+                    +'<p><b>Date: </b>'+e.features[0].properties.created+' (UTC +0)</p>'
+                    +'<p><b>Species: </b>'+e.features[0].properties.type+'</p>'
+                    +'<p><b>No Sighted: </b>'+e.features[0].properties.no_sighted+'</p>'
+                    +'<p><b>Witness: </b>'+e.features[0].properties.witness+'</p>'
+                    +'<p><b>Submitter: </b> '+e.features[0].properties.entity+'</p>'
+                    +'<p><b>Date Added: </b> '+e.features[0].properties.ssemmi_date_added+'</p>'
+                    +'</div>'
+                    +'</div>'
                         )
                 .addTo(map);
             })
@@ -393,6 +400,7 @@ export default {
                 let filtered_sightings = (isNaN(value.no_sighted)) ? 1 : value.no_sighted
                 let filtered_date = dayjs('2011-01-01 20:00:00')
                 let f_day = 1
+                let days_ago = 0
                 let f_month = 1
                 let f_year = 2011
                 let f_epoch_date = new Date().getTime()
@@ -402,31 +410,35 @@ export default {
                     f_day = filtered_date.date()
                     f_month = filtered_date.month() + 1
                     f_year = filtered_date.year()
+                   days_ago = dayjs().diff(filtered_date, 'day')
                     f_epoch_date = new Date(filtered_date).getTime()
                 }
 
-                const sightingEntry = {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [filtered_long, filtered_lat]
-                    },
-                    "properties": {
-                        "entity": value.data_source_entity,
-                        "ssemmi_id": value.ssemmi_id,
-                        "created": value.created,
-                        "day": f_day,
-                        "month": f_month,
-                        "year": f_year,
-                        "epoch_date": f_epoch_date,
-                        "no_sighted": filtered_sightings,
-                        "witness": value.data_source_witness,
-                        "comments": value.data_source_comments,
-                        "ssemmi_date_added": value.ssemmi_date_added,
-                    }
+              const sightingEntry = {
+                "type": "Feature",
+                "geometry": {
+                  "type": "Point",
+                  "coordinates": [filtered_long, filtered_lat]
+                },
+                "properties": {
+                  "entity": value.data_source_entity,
+                  "ssemmi_id": value.ssemmi_id,
+                  "created": value.created,
+                  "type": value.type,
+                  "day": f_day,
+                  "month": f_month,
+                  "year": f_year,
+                  "epoch_date": f_epoch_date,
+                  "no_sighted": filtered_sightings,
+                  "days_ago": days_ago.toString(),
+                  "witness": value.data_source_witness,
+                  "comments": value.data_source_comments,
+                  "ssemmi_date_added": value.ssemmi_date_added,
                 }
+              }
+
+
                 sightingsArray.push(sightingEntry)
-                this.geoJSONSightings.push(sightingEntry)
             }
         })
           const mapId = (this.getParent === 'Visualiser' ? 'ssemmi-map-layer' : 'ssemmi-heat-layer')
